@@ -1,17 +1,24 @@
 import mysql from 'mysql2/promise';
+import type { PoolOptions } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const connection = mysql.createPool({
-  host: process.env.MYSQLHOST!,
-  port: Number(process.env.MYSQLPORT) || 3306,
-  user: process.env.MYSQLUSER!,
-  password: process.env.MYSQLPASSWORD!,
-  database: process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE!,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const access: PoolOptions = {
+  host: process.env.DB_HOST!,
+  user: process.env.DB_USER!,
+  password: process.env.DB_PASS!,
+  database: process.env.DB_NAME!,
+  port: Number(process.env.DB_PORT) || 3306,
+};
 
-export default connection;
+const pool = mysql.createPool(access);
+
+pool.getConnection()
+  .then(conn => {
+    console.log("✅ Conectado ao Railway!");
+    conn.release();
+  })
+  .catch(err => console.log("❌ Erro:", err.message));
+
+export default pool;

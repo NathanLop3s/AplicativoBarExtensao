@@ -19,7 +19,7 @@ export default function CardapioScreen() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://192.168.18.100:3001/produtos');
+      const response = await fetch('https://aplicativobarextensao-production.up.railway.app/produtos');
       const data = await response.json();
       setProdutos(data);
     } catch (error) {
