@@ -36,7 +36,8 @@ app.get('/produtos/:id', async (req, res) => {
   }
 });
 
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`API http://localhost:${PORT}`);
+const PORT = process.env.PORT || 3001;
+
+app.listen(Number(PORT), "0.0.0.0", () => {
+  console.log(`API rodando na porta ${PORT}`);
 });
