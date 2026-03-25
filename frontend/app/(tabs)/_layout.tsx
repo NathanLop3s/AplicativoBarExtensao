@@ -15,7 +15,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
-      }}>
+        tabBarStyle: {
+          backgroundColor: '#5e3030', 
+        }
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -23,6 +27,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
+      
       <Tabs.Screen
         name="cardapio"
         options={{
@@ -30,13 +35,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet" color={color} />,
         }}
       />
+      
       <Tabs.Screen
         name="usuario"
         options={{
-          title: 'Usuario',
+          title: 'Usuário',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
         }}
       />
+
+      
     </Tabs>
   );
 }
