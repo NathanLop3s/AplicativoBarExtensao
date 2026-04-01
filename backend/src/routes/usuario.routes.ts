@@ -3,6 +3,7 @@ import connection from '../database.js';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
+const SECRET = process.env.JWT_SECRET || 'chave';
 
 router.post('/login', async (req, res) => {
     const { email, senha } = req.body;
@@ -20,12 +21,19 @@ router.post('/login', async (req, res) => {
         const usuario = rows[0];
 
         if (senha !== usuario.senha) {
-            return res.status(401).json({ erro: 'Senha inválida' });
+            return res.status(401).json({ erro: 'Credenciais inválidas' });
         }
+
+        const token = jwt.sign(
+            { id: usuario.id, email: usuario.email },
+            SECRET,
+            { expiresIn: '1h' }
+        );
 
         return res.json({
             message: 'Login OK',
-            usuario: usuario
+            usuario: usuario,
+            token: token
         });
 
     } catch (error) {
