@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { API_URL } from '@/constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login() {
   const router = useRouter();
@@ -21,6 +22,8 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        await AsyncStorage.setItem('user', JSON.stringify(data.usuario));
+        await AsyncStorage.setItem('token', data.token);
         router.replace('/(tabs)');
       } else {
         setMsg(data.erro);

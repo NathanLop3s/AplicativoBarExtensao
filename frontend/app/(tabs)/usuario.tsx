@@ -1,12 +1,21 @@
 import { useState } from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { API_URL } from '@/constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 export default function Usuario() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [msg, setMsg] = useState('');
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('user');
+    router.replace('/login');
+  };
 
   const handleRegister = async () => {
     try {
@@ -53,6 +62,8 @@ export default function Usuario() {
   };
 
 
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Cadastro</Text>
@@ -92,6 +103,9 @@ export default function Usuario() {
 
         {msg ? <Text style={styles.msg}>{msg}</Text> : null}
       </View>
+      <TouchableOpacity style={styles.botao} onPress={handleLogout}>
+        <Text style={styles.botaoTexto}>Sair</Text>
+      </TouchableOpacity>
     </View>
   );
 }
