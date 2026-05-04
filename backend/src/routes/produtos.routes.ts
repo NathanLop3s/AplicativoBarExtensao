@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import connection from '../database.js';
+import { authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
+
   try {
     const [rows] = await connection.query('SELECT * FROM produtos');
     return res.json(rows);
@@ -12,11 +14,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/categoria/:tipo', async (req, res) => {
+router.get('/categoria/:tipo', authMiddleware, async (req, res) => {
   const { tipo } = req.params;
   try {
     const [rows] = await connection.query(
-      'SELECT * FROM produtos WHERE categoria = ?', 
+      'SELECT * FROM produtos WHERE categoria = ?',
       [tipo]
     );
     return res.json(rows);
@@ -25,11 +27,11 @@ router.get('/categoria/:tipo', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
   try {
     const [rows]: any = await connection.query(
-      'SELECT * FROM produtos WHERE id = ?', 
+      'SELECT * FROM produtos WHERE id = ?',
       [id]
     );
 

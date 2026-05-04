@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { API_URL } from '@/constants/config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage'; //mudar pro Expo SecureStore depois
 
 export default function Login() {
   const router = useRouter();
@@ -21,15 +21,29 @@ export default function Login() {
 
       const data = await response.json();
 
+
       if (response.ok) {
+
         await AsyncStorage.setItem('user', JSON.stringify(data.usuario));
         await AsyncStorage.setItem('token', data.token);
-        router.replace('/(tabs)');
+
+        const tokenSalvo = await AsyncStorage.getItem('token');
+
+        if (!tokenSalvo) {
+          setMsg('Erro ao salvar token');
+          return;
+        }
+
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 300);
+
       } else {
         setMsg(data.erro);
       }
 
-    } catch {
+    } catch (error) {
+      console.log('ERRO LOGIN:', error);
       setMsg('Erro ao conectar');
     }
   };

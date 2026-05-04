@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import connection from '../database.js';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const router = Router();
 const SECRET = process.env.JWT_SECRET || 'chave';
@@ -20,7 +21,9 @@ router.post('/login', async (req, res) => {
 
         const usuario = rows[0];
 
-        if (senha !== usuario.senha) {
+        const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+        if (!senhaValida) {
             return res.status(401).json({ erro: 'Credenciais inválidas' });
         }
 
@@ -54,9 +57,11 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ erro: 'Email já cadastrado' });
         }
 
+        const senhaHash = await bcrypt.hash(senha, 10);
+
         await connection.query(
             'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
-            [nome, email, senha]
+            [nome, email, senhaHash]
         );
 
         return res.json({ message: 'Usuário criado com sucesso' });

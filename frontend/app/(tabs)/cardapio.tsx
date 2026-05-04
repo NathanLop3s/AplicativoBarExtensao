@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { API_URL } from '@/constants/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function CardapioScreen() {
   const insets = useSafeAreaInsets();
@@ -18,18 +20,30 @@ export default function CardapioScreen() {
     fetchData();
   }, []);
 
+
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/produtos`);
+      const token = await AsyncStorage.getItem('token');
+
+      const response = await fetch(`${API_URL}/produtos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const data = await response.json();
       setProdutos(data);
+
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     }
   };
 
   const formatarMoeda = (valor: number) => {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return valor.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
   };
 
   const adicionarAoCarrinho = (produto: any) => {
