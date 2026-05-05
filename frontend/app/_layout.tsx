@@ -1,34 +1,51 @@
-import { Stack } from 'expo-router';
-import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, ActivityIndicator } from "react-native";
 
 export default function RootLayout() {
-  const [logado, setLogado] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    checkLogin();
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        setIsAuthenticated(!!token);
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const checkLogin = async () => {
-    const user = await AsyncStorage.getItem('user');
+    checkAuth();
+  }, [segments]);
 
-    if (user) {
-      setLogado(true);
-    } else {
-      setLogado(false);
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === "login";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/login");
     }
-  };
 
-  // evita tela bugada enquanto carrega
-  if (logado === null) return null;
+    if (isAuthenticated && inAuthGroup) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, segments, isLoading]);
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {!logado ? (
-        <Stack.Screen name="login" />
-      ) : (
-        <Stack.Screen name="(tabs)" />
-      )}
-    </Stack>
-  );
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

@@ -2,8 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import produtosRoutes from './routes/produtos.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
-
-
+import pedidosRoutes from './routes/pedidos.routes.js';
 
 
 const app = express();
@@ -13,6 +12,7 @@ app.use(express.json());
 
 app.use('/usuario', usuarioRoutes);
 app.use('/produtos', produtosRoutes);
+app.use('/pedidos', pedidosRoutes)
 
 const PORT = process.env.PORT || 8080;
 

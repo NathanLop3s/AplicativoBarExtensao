@@ -7,23 +7,34 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { API_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useRouter } from 'expo-router';
 
 export default function CardapioScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+
   const [produtos, setProdutos] = useState<any[]>([]);
-  const [carrinho, setCarrinho] = useState<string[]>([]);
-  const [total, setTotal] = useState(0);
+  const [carrinho, setCarrinho] = useState<any[]>([]);
   const [mostrarResumo, setMostrarResumo] = useState(false);
+  const total = carrinho.reduce((acc, item) => {
+    return acc + item.preco * item.quantidade;
+  }, 0);
+  const totalItens = carrinho.reduce((acc, item) => {
+    return acc + item.quantidade;
+  }, 0);
 
   useEffect(() => {
     fetchData();
   }, []);
 
-
   const fetchData = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
+
+      if (!token) {
+        router.replace('/login');
+        return;
+      }
 
       const response = await fetch(`${API_URL}/produtos`, {
         headers: {
@@ -31,8 +42,19 @@ export default function CardapioScreen() {
         },
       });
 
+      if (response.status === 401) {
+        await AsyncStorage.removeItem('token');
+        router.replace('/login');
+        return;
+      }
+
       const data = await response.json();
-      setProdutos(data);
+
+      if (Array.isArray(data)) {
+        setProdutos(data);
+      } else {
+        setProdutos([]);
+      }
 
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
@@ -47,22 +69,46 @@ export default function CardapioScreen() {
   };
 
   const adicionarAoCarrinho = (produto: any) => {
-    setCarrinho(prev => [...prev, produto.nome]);
-    setTotal(prev => prev + Number(produto.preco));
+    setCarrinho(prev => {
+      const existente = prev.find(p => p.id === produto.id);
+
+      if (existente) {
+        return prev.map(p =>
+          p.id === produto.id
+            ? { ...p, quantidade: p.quantidade + 1 }
+            : p
+        );
+      }
+
+      return [...prev, { ...produto, quantidade: 1 }];
+    });
   };
 
   const removerDoCarrinho = (produto: any) => {
-    const index = carrinho.lastIndexOf(produto.nome);
-    if (index !== -1) {
-      const novoCarrinho = [...carrinho];
-      novoCarrinho.splice(index, 1);
-      setCarrinho(novoCarrinho);
-      setTotal(prev => prev - Number(produto.preco));
-    }
+    setCarrinho(prev => {
+      const existente = prev.find(p => p.id === produto.id);
+
+      if (!existente) return prev;
+
+      if (existente.quantidade === 1) {
+        return prev.filter(p => p.id !== produto.id);
+      }
+
+      return prev.map(p =>
+        p.id === produto.id
+          ? { ...p, quantidade: p.quantidade - 1 }
+          : p
+      );
+    });
   };
 
   const enviarWhatsapp = () => {
-    const mensagem = `Olá, segue meu pedido:\n\nItens: ${carrinho.length}\nProdutos: ${carrinho.length > 0 ? carrinho.join(', ') : 'nenhum'}\nTotal: ${formatarMoeda(total)}`;
+    const listaProdutos = carrinho
+      .map(p => `${p.nome} x${p.quantidade}`)
+      .join(', ');
+
+    const mensagem = `Olá, segue meu pedido:\n\nItens: ${totalItens}\nProdutos: ${listaProdutos || 'nenhum'}\nTotal: ${formatarMoeda(total)}`;
+
     Linking.openURL(`https://wa.me/5537999432706?text=${encodeURIComponent(mensagem)}`);
   };
 
@@ -73,15 +119,18 @@ export default function CardapioScreen() {
         <ThemedText type="title" style={styles.titulo}>Cardápio Digital</ThemedText>
 
         <ThemedText style={styles.info}>
-          Carrinho: {carrinho.length} itens | Total: {formatarMoeda(total)}
+          Carrinho: {totalItens} itens | Total: {formatarMoeda(total)}
         </ThemedText>
 
         <Modal visible={mostrarResumo} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.bottomSheet}>
               <Text style={styles.resumoTitulo}>Resumo do Pedido</Text>
-              <Text>Itens: {carrinho.length}</Text>
-              <Text>Produtos: {carrinho.length > 0 ? carrinho.join(', ') : 'nenhum'}</Text>
+              <Text>Itens: {totalItens}</Text>
+              <Text>
+                Produtos: {carrinho.length > 0
+                  ? carrinho.map(p => `${p.nome} x${p.quantidade}`).join(', ')
+                  : 'nenhum'}              </Text>
               <Text style={styles.total}>Total: {formatarMoeda(total)}</Text>
 
               <Text style={styles.pix}>Pagar com Pix</Text>
@@ -103,20 +152,26 @@ export default function CardapioScreen() {
         <View style={styles.lista}>
           {produtos.map((produto, index) => (
             <ThemedView key={index} style={styles.card}>
-              {/* BLOCO SUPERIOR: Imagem e Textos */}
               <View>
                 <Image
-                  source={{ uri: produto.imagem_url || 'https://via.placeholder.com/300/e0e0e0/969696?text=Sem+Imagem' }}
+                  source={{
+                    uri:
+                      produto.imagem_url ||
+                      'https://via.placeholder.com/300/e0e0e0/969696?text=Sem+Imagem',
+                  }}
                   style={styles.img}
                   resizeMode="cover"
                 />
                 <Text style={styles.nome}>{produto.nome}</Text>
-                <Text style={styles.desc} numberOfLines={2}>{produto.descricao}</Text>
+                <Text style={styles.desc} numberOfLines={2}>
+                  {produto.descricao}
+                </Text>
               </View>
 
-              {/* BLOCO INFERIOR: Preço e Ações */}
               <View>
-                <Text style={styles.preco}>{formatarMoeda(Number(produto.preco))}</Text>
+                <Text style={styles.preco}>
+                  {formatarMoeda(Number(produto.preco))}
+                </Text>
 
                 <TouchableOpacity style={styles.add} onPress={() => adicionarAoCarrinho(produto)}>
                   <Text style={styles.btnText}>+ Adicionar</Text>
@@ -174,8 +229,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginBottom: 15,
-    minHeight: 300, // Aumentei um pouco para dar respiro
-    justifyContent: 'space-between', // Alinha os blocos (topo e baixo)
+    minHeight: 300,
+    justifyContent: 'space-between',
   },
   img: {
     width: '100%',

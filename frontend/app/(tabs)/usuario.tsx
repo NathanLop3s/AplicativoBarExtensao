@@ -14,6 +14,7 @@ export default function Usuario() {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('token');
     router.replace('/login');
   };
 
