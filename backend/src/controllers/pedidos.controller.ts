@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express'; 
+import type { Request, Response } from 'express';
 import db from '../database.js';
 
 export const criarPedido = async (req: Request, res: Response) => {
@@ -52,5 +52,45 @@ export const criarPedido = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao criar pedido' });
+  }
+};
+
+export const listarPedidos = async (req: any, res: any) => {
+  try {
+    const usuario_id = req.user.id;
+
+    const [pedidos]: any = await db.query(
+      `
+      SELECT * FROM pedidos
+      WHERE usuario_id = ?
+      ORDER BY created_at DESC
+      `,
+      [usuario_id]
+    );
+
+    for (const pedido of pedidos) {
+      const [itens]: any = await db.query(
+        `
+        SELECT 
+          pi.quantidade,
+          pi.preco,
+          p.nome
+        FROM pedido_itens pi
+        JOIN produtos p ON p.id = pi.produto_id
+        WHERE pi.pedido_id = ?
+        `,
+        [pedido.id]
+      );
+
+      pedido.itens = itens;
+    }
+
+    res.json(pedidos);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      erro: 'Erro ao buscar pedidos'
+    });
   }
 };

@@ -6,8 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { API_URL } from '@/constants/config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import {
+  pegarToken,
+  removerToken,
+} from '@/services/storage';
 
 export default function CardapioScreen() {
   const insets = useSafeAreaInsets();
@@ -15,6 +18,7 @@ export default function CardapioScreen() {
 
   const [produtos, setProdutos] = useState<any[]>([]);
   const [carrinho, setCarrinho] = useState<any[]>([]);
+  const [loadingPedido, setLoadingPedido] = useState(false);
   const [mostrarResumo, setMostrarResumo] = useState(false);
   const total = carrinho.reduce((acc, item) => {
     return acc + item.preco * item.quantidade;
@@ -29,8 +33,7 @@ export default function CardapioScreen() {
 
   const fetchData = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-
+      const token = await pegarToken();
       if (!token) {
         router.replace('/login');
         return;
@@ -43,7 +46,7 @@ export default function CardapioScreen() {
       });
 
       if (response.status === 401) {
-        await AsyncStorage.removeItem('token');
+        await removerToken();
         router.replace('/login');
         return;
       }
@@ -112,6 +115,49 @@ export default function CardapioScreen() {
     Linking.openURL(`https://wa.me/5537999432706?text=${encodeURIComponent(mensagem)}`);
   };
 
+  const finalizarPedido = async () => {
+    setLoadingPedido(true);
+    try {
+      const token = await pegarToken();
+      if (!token) {
+        router.replace('/login');
+        return;
+      }
+
+      const items = carrinho.map(item => ({
+        produto_id: item.id,
+        quantidade: item.quantidade,
+      }));
+
+      const response = await fetch(`${API_URL}/pedidos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ items }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.erro || 'Erro ao criar pedido');
+        return;
+      }
+
+      alert('Pedido realizado com sucesso!');
+
+      setCarrinho([]);
+      setMostrarResumo(false);
+
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao conectar com servidor');
+    } finally {
+      setLoadingPedido(false);
+    }
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -128,7 +174,7 @@ export default function CardapioScreen() {
               <Text style={styles.resumoTitulo}>Resumo do Pedido</Text>
               <Text>Itens: {totalItens}</Text>
               <Text>
-                Produtos: {carrinho.length > 0
+                Produtos: {totalItens > 0
                   ? carrinho.map(p => `${p.nome} x${p.quantidade}`).join(', ')
                   : 'nenhum'}              </Text>
               <Text style={styles.total}>Total: {formatarMoeda(total)}</Text>
@@ -138,10 +184,17 @@ export default function CardapioScreen() {
                 <QRCode value={`Pagamento: ${total}`} size={180} />
               </View>
 
-              <TouchableOpacity style={styles.btnWhatsapp} onPress={enviarWhatsapp}>
-                <Text style={styles.btnText}>Enviar no WhatsApp</Text>
+              <TouchableOpacity
+                style={[
+                  styles.btnFinalizar,
+                  (carrinho.length === 0 || loadingPedido) && { opacity: 0.5 }]}
+                disabled={carrinho.length === 0 || loadingPedido}
+                onPress={finalizarPedido}
+              >
+                <Text style={styles.btnText}>
+                  {loadingPedido ? 'Enviando...' : 'Confirmar Pedido'}
+                </Text>
               </TouchableOpacity>
-
               <TouchableOpacity style={styles.btnFechar} onPress={() => setMostrarResumo(false)}>
                 <Text style={styles.btnText}>Fechar</Text>
               </TouchableOpacity>
@@ -186,7 +239,14 @@ export default function CardapioScreen() {
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnFinalizar} onPress={() => setMostrarResumo(true)}>
+          <TouchableOpacity style={styles.btnFinalizar} onPress={() => {
+            if (carrinho.length === 0) {
+              alert('Adicione itens no carrinho');
+              return;
+            }
+
+            setMostrarResumo(true);
+          }}>
             <Text style={styles.btnText}>Finalizar Pedido</Text>
           </TouchableOpacity>
 

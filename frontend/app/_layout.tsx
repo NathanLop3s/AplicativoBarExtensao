@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator } from "react-native";
+import { pegarToken } from '@/services/storage';
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -13,7 +13,7 @@ export default function RootLayout() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
+        const token = await pegarToken();
         setIsAuthenticated(!!token);
       } catch (error) {
         setIsAuthenticated(false);
@@ -35,7 +35,7 @@ export default function RootLayout() {
     }
 
     if (isAuthenticated && inAuthGroup) {
-      router.replace("/");
+      router.replace("/(tabs)");
     }
   }, [isAuthenticated, segments, isLoading]);
 
