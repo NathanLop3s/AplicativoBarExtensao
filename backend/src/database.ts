@@ -16,7 +16,7 @@ const pool = mysql.createPool(access);
 
 pool.getConnection()
   .then(conn => {
-    console.log("✅ Conectado ao Railway!");
+    console.log("Conectado");
     conn.release();
   })
   .catch(err => console.log("❌ Erro:", err.message));

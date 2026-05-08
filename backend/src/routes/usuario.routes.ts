@@ -67,7 +67,11 @@ router.post('/register', async (req, res) => {
         return res.json({ message: 'Usuário criado com sucesso' });
 
     } catch (error) {
-        return res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+        console.error(error);
+
+        return res.status(500).json({
+            erro: 'Erro ao cadastrar usuário'
+        });
     }
 });
 
