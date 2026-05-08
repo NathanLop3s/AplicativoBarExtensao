@@ -11,6 +11,8 @@ import {
   pegarToken,
   removerToken,
 } from '@/services/storage';
+import * as Clipboard from 'expo-clipboard';
+
 
 export default function CardapioScreen() {
   const insets = useSafeAreaInsets();
@@ -20,6 +22,8 @@ export default function CardapioScreen() {
   const [carrinho, setCarrinho] = useState<any[]>([]);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [mostrarResumo, setMostrarResumo] = useState(false);
+  const [pixCopiaECola, setPixCopiaECola] = useState('');
+  const [qrCode, setQrCode] = useState('');
   const total = carrinho.reduce((acc, item) => {
     return acc + item.preco * item.quantidade;
   }, 0);
@@ -115,6 +119,37 @@ export default function CardapioScreen() {
     Linking.openURL(`https://wa.me/5537999432706?text=${encodeURIComponent(mensagem)}`);
   };
 
+  const gerarPix = async () => {
+    try {
+      const token = await pegarToken();
+
+      const response = await fetch(`${API_URL}/pagamento/pix`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          total,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.erro || 'Erro ao gerar PIX');
+        return;
+      }
+
+      setQrCode(data.qr_code_base64);
+      setPixCopiaECola(data.qr_code);
+
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao gerar PIX');
+    }
+  };
+
   const finalizarPedido = async () => {
     setLoadingPedido(true);
     try {
@@ -180,9 +215,37 @@ export default function CardapioScreen() {
               <Text style={styles.total}>Total: {formatarMoeda(total)}</Text>
 
               <Text style={styles.pix}>Pagar com Pix</Text>
+
               <View style={styles.qrContainer}>
-                <QRCode value={`Pagamento: ${total}`} size={180} />
+                {qrCode ? (
+                  <Image
+                    source={{ uri: `data:image/png;base64,${qrCode}` }}
+                    style={{ width: 180, height: 180 }}
+                  />
+                ) : (
+                  <Text>Gerando PIX...</Text>
+                )}
               </View>
+              <Text
+                selectable
+                style={{
+                  marginTop: 10,
+                  fontSize: 12,
+                  textAlign: 'center',
+                }}
+              >
+                {pixCopiaECola}
+              </Text>
+
+              <TouchableOpacity
+                style={styles.btnWhatsapp}
+                onPress={async () => {
+                  await Clipboard.setStringAsync(pixCopiaECola);
+                  alert('PIX copiado!');
+                }}
+              >
+                <Text style={styles.btnText}>Copiar PIX</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
@@ -246,6 +309,7 @@ export default function CardapioScreen() {
             }
 
             setMostrarResumo(true);
+            gerarPix();
           }}>
             <Text style={styles.btnText}>Finalizar Pedido</Text>
           </TouchableOpacity>
