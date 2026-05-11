@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
-import { Payment } from 'mercadopago';
+import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { mpClient } from '../config/mercadopago.js';
+import pool from '../database.js';
+
 
 export const criarPix = async (req: Request, res: Response) => {
   try {
@@ -26,10 +28,48 @@ export const criarPix = async (req: Request, res: Response) => {
         resultado.point_of_interaction?.transaction_data?.qr_code_base64,
     });
 
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       erro: 'Erro ao gerar PIX',
     });
+  }
+};
+
+export const receberWebhook = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+
+    const paymentId = req.body?.data?.id;
+
+    if (!paymentId) {
+      return res.sendStatus(200);
+    }
+
+    const payment = new Payment(mpClient);
+
+    const pagamento = await payment.get({
+      id: paymentId,
+    });
+
+    console.log(pagamento);
+
+    if (pagamento.status === 'approved') {
+
+      await pool.query(
+        'UPDATE pedidos SET status = ? WHERE payment_id = ?',
+        ['pago', paymentId]
+      );
+    }
+
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.error(error);
+
+    return res.sendStatus(500);
   }
 };
