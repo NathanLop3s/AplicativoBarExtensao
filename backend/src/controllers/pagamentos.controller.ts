@@ -63,7 +63,7 @@ export const receberWebhook = async (
       id: paymentId,
     });
 
-    if (true) {
+    if (pagamento.status === 'approved') {
 
       const [resultado]: any = await pool.query(
         'UPDATE pedidos SET status = ? WHERE payment_id = ?',
