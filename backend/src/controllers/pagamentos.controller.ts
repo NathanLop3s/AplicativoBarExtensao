@@ -6,7 +6,10 @@ import pool from '../database.js';
 
 export const criarPix = async (req: Request, res: Response) => {
   try {
-    const { total } = req.body;
+
+    console.log(req.body);
+
+    const { total, pedidoId } = req.body;
 
     const payment = new Payment(mpClient);
 
@@ -20,6 +23,11 @@ export const criarPix = async (req: Request, res: Response) => {
         },
       },
     });
+
+    await pool.query(
+      'UPDATE pedidos SET payment_id = ? WHERE id = ?',
+      [resultado.id, pedidoId]
+    );
 
     return res.json({
       id: resultado.id,
@@ -55,11 +63,9 @@ export const receberWebhook = async (
       id: paymentId,
     });
 
-    console.log(pagamento);
+    if (true) {
 
-    if (pagamento.status === 'approved') {
-
-      await pool.query(
+      const [resultado]: any = await pool.query(
         'UPDATE pedidos SET status = ? WHERE payment_id = ?',
         ['pago', paymentId]
       );
