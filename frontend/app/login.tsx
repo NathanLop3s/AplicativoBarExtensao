@@ -41,7 +41,13 @@ export default function Login() {
         }
 
         setTimeout(() => {
-          router.replace('/(tabs)');
+
+          if (data.usuario.admin) {
+            router.replace('/admin');
+          } else {
+            router.replace('/(tabs)');
+          }
+
         }, 300);
 
       } else {

@@ -4,7 +4,7 @@ import produtosRoutes from './routes/produtos.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
 import pedidosRoutes from './routes/pedidos.routes.js';
 import pagamentoRoutes from './routes/pagamentos.routes.js';
-
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 
@@ -15,6 +15,7 @@ app.use('/pagamento', pagamentoRoutes);
 app.use('/usuario', usuarioRoutes);
 app.use('/produtos', produtosRoutes);
 app.use('/pedidos', pedidosRoutes)
+app.use('/admin', adminRoutes);
 
 const PORT = process.env.PORT || 8080;
 

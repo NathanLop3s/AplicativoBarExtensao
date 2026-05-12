@@ -16,6 +16,8 @@ import {
 } from '@/services/storage';
 
 import * as Clipboard from 'expo-clipboard';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 export default function CardapioScreen() {
   const insets = useSafeAreaInsets();
@@ -38,9 +40,11 @@ export default function CardapioScreen() {
     return acc + item.quantidade;
   }, 0);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const fetchData = async () => {
     try {

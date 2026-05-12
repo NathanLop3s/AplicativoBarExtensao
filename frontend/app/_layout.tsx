@@ -1,11 +1,15 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import { pegarToken } from '@/services/storage';
+import {
+  pegarToken,
+  pegarUsuario,
+} from '@/services/storage';
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const router = useRouter();
   const segments = useSegments();
@@ -14,9 +18,15 @@ export default function RootLayout() {
     const checkAuth = async () => {
       try {
         const token = await pegarToken();
+        const usuario = await pegarUsuario();
+
         setIsAuthenticated(!!token);
+        setIsAdmin(!!usuario?.admin);
+
       } catch (error) {
         setIsAuthenticated(false);
+        setIsAdmin(false);
+
       } finally {
         setIsLoading(false);
       }
@@ -35,17 +45,27 @@ export default function RootLayout() {
     }
 
     if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)");
+
+      router.replace('/(tabs)');
+
     }
-  }, [isAuthenticated, segments, isLoading]);
+  }, [isAuthenticated, isAdmin, segments, isLoading]);
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }} />
+  );
 }
