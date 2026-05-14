@@ -9,6 +9,15 @@ const SECRET = process.env.JWT_SECRET || 'chave';
 router.post('/login', async (req, res) => {
     const { email, senha } = req.body;
 
+    if (
+        !email?.trim() ||
+        !senha?.trim()
+    ) {
+        return res.status(400).json({
+            erro: 'Email e senha obrigatórios'
+        });
+    }
+
     try {
         const [rows]: any = await connection.query(
             'SELECT * FROM usuarios WHERE email = ?',
@@ -16,15 +25,22 @@ router.post('/login', async (req, res) => {
         );
 
         if (rows.length === 0) {
-            return res.status(401).json({ erro: 'Credenciais inválidas' });
+            return res.status(401).json({
+                erro: 'Credenciais inválidas'
+            });
         }
 
         const usuario = rows[0];
 
-        const senhaValida = await bcrypt.compare(senha, usuario.senha);
+        const senhaValida = await bcrypt.compare(
+            senha,
+            usuario.senha
+        );
 
         if (!senhaValida) {
-            return res.status(401).json({ erro: 'Credenciais inválidas' });
+            return res.status(401).json({
+                erro: 'Credenciais inválidas'
+            });
         }
 
         const token = jwt.sign(
@@ -39,17 +55,46 @@ router.post('/login', async (req, res) => {
 
         return res.json({
             message: 'Login OK',
-            usuario: usuario,
-            token: token
+            usuario,
+            token
         });
 
     } catch (error) {
-        return res.status(500).json({ erro: 'Erro no login' });
+        console.error(error);
+
+        return res.status(500).json({
+            erro: 'Erro no login'
+        });
     }
 });
 
 router.post('/register', async (req, res) => {
     const { nome, email, senha } = req.body;
+
+    if (
+        !nome?.trim() ||
+        !email?.trim() ||
+        !senha?.trim()
+    ) {
+        return res.status(400).json({
+            erro: 'Preencha todos os campos'
+        });
+    }
+
+    if (senha.length < 6) {
+        return res.status(400).json({
+            erro: 'Senha deve ter pelo menos 6 caracteres'
+        });
+    }
+
+    const emailValido =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!emailValido) {
+        return res.status(400).json({
+            erro: 'Email inválido'
+        });
+    }
 
     try {
         const [existe]: any = await connection.query(
@@ -58,17 +103,24 @@ router.post('/register', async (req, res) => {
         );
 
         if (existe.length > 0) {
-            return res.status(400).json({ erro: 'Email já cadastrado' });
+            return res.status(400).json({
+                erro: 'Email já cadastrado'
+            });
         }
 
-        const senhaHash = await bcrypt.hash(senha, 10);
+        const senhaHash = await bcrypt.hash(
+            senha,
+            10
+        );
 
         await connection.query(
             'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
             [nome, email, senhaHash]
         );
 
-        return res.json({ message: 'Usuário criado com sucesso' });
+        return res.json({
+            message: 'Usuário criado com sucesso'
+        });
 
     } catch (error) {
         console.error(error);
