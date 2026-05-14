@@ -2,13 +2,15 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "nodenext",
-    "moduleResolution": "nodenext", 
-    "esModuleInterop": true,         
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
-    
+
+    "types": ["node", "jest"],
+
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
 
     "sourceMap": true,
     "declaration": true,
@@ -17,11 +19,11 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "jsx": "react-jsx", 
-    
+    "jsx": "react-jsx",
+
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }
