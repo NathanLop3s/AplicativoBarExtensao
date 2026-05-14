@@ -88,7 +88,6 @@ export default function Login() {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.formContainer}>
               
-              {/* Brand mark */}
               <View style={styles.brandArea}>
                 <View style={styles.logoRing}>
                   <Text style={styles.logoChar}>B</Text>
@@ -99,8 +98,7 @@ export default function Login() {
 
               <View style={styles.divider} />
 
-              {/* Form */}
-              <View style={styles.formArea}>
+              <View>
                 <Text style={styles.formTitle}>
                   {isCadastro ? 'Criar conta' : 'Entrar'}
                 </Text>
@@ -268,7 +266,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#2a2018',
-    height: 50, // Altura fixa para evitar que ele estique
+    height: 50,
     overflow: 'hidden',
   },
   input: {
