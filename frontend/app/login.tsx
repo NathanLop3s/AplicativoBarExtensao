@@ -1,6 +1,19 @@
 import { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, StatusBar } from 'react-native';
+import { 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  Text, 
+  StyleSheet, 
+  StatusBar, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  TouchableWithoutFeedback, 
+  Keyboard 
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '@/constants/config';
 import { salvarToken, salvarUsuario, pegarToken } from '@/services/storage';
 
@@ -11,6 +24,7 @@ export default function Login() {
   const [msg, setMsg] = useState('');
   const [isCadastro, setIsCadastro] = useState(false);
   const [nome, setNome] = useState('');
+  const [verSenha, setVerSenha] = useState(false);
 
   const handleLogin = async () => {
     try {
@@ -58,103 +72,138 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Brand mark */}
-      <View style={styles.brandArea}>
-        <View style={styles.logoRing}>
-          <Text style={styles.logoChar}>B</Text>
-        </View>
-        <Text style={styles.brandName}>Bar Extensão</Text>
-        <Text style={styles.brandTagline}>cardápio digital</Text>
-      </View>
-
-      {/* Divider */}
-      <View style={styles.divider} />
-
-      {/* Form */}
-      <View style={styles.formArea}>
-        <Text style={styles.formTitle}>
-          {isCadastro ? 'Criar conta' : 'Entrar'}
-        </Text>
-
-        {isCadastro && (
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Nome</Text>
-            <TextInput
-              placeholder="Seu nome"
-              placeholderTextColor="#4a3f2f"
-              style={styles.input}
-              value={nome}
-              onChangeText={setNome}
-            />
-          </View>
-        )}
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>E-mail</Text>
-          <TextInput
-            placeholder="seu@email.com"
-            placeholderTextColor="#4a3f2f"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-        </View>
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            placeholder="••••••••"
-            placeholderTextColor="#4a3f2f"
-            secureTextEntry
-            style={styles.input}
-            value={senha}
-            onChangeText={setSenha}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.btnPrimary}
-          onPress={isCadastro ? handleRegister : handleLogin}
-          activeOpacity={0.85}
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="#0e0b08" />
+      
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          bounces={false}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.btnPrimaryText}>
-            {isCadastro ? 'Criar conta' : 'Entrar'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.formContainer}>
+              
+              {/* Brand mark */}
+              <View style={styles.brandArea}>
+                <View style={styles.logoRing}>
+                  <Text style={styles.logoChar}>B</Text>
+                </View>
+                <Text style={styles.brandName}>Bar Extensão</Text>
+                <Text style={styles.brandTagline}>cardápio digital</Text>
+              </View>
 
-        {msg ? (
-          <View style={styles.msgBox}>
-            <Text style={styles.msgText}>{msg}</Text>
-          </View>
-        ) : null}
+              <View style={styles.divider} />
 
-        <TouchableOpacity
-          style={styles.switchBtn}
-          onPress={() => { setIsCadastro(!isCadastro); setMsg(''); }}
-        >
-          <Text style={styles.switchText}>
-            {isCadastro ? 'Já tem conta? ' : 'Não tem conta? '}
-            <Text style={styles.switchTextAccent}>
-              {isCadastro ? 'Entrar' : 'Cadastre-se'}
-            </Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
+              {/* Form */}
+              <View style={styles.formArea}>
+                <Text style={styles.formTitle}>
+                  {isCadastro ? 'Criar conta' : 'Entrar'}
+                </Text>
+
+                {isCadastro && (
+                  <View style={styles.inputWrapper}>
+                    <Text style={styles.label}>Nome</Text>
+                    <TextInput
+                      placeholder="Seu nome"
+                      placeholderTextColor="#4a3f2f"
+                      style={styles.input}
+                      value={nome}
+                      onChangeText={setNome}
+                    />
+                  </View>
+                )}
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>E-mail</Text>
+                  <TextInput
+                    placeholder="seu@email.com"
+                    placeholderTextColor="#4a3f2f"
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Senha</Text>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      placeholder="••••••••"
+                      placeholderTextColor="#4a3f2f"
+                      secureTextEntry={!verSenha}
+                      style={styles.inputInside}
+                      value={senha}
+                      onChangeText={setSenha}
+                    />
+                    <TouchableOpacity 
+                      style={styles.eyeIcon} 
+                      onPress={() => setVerSenha(!verSenha)}
+                    >
+                      <Ionicons 
+                        name={verSenha ? "eye-off-outline" : "eye-outline"} 
+                        size={20} 
+                        color="#c9943a" 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.btnPrimary}
+                  onPress={isCadastro ? handleRegister : handleLogin}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.btnPrimaryText}>
+                    {isCadastro ? 'Criar conta' : 'Entrar'}
+                  </Text>
+                </TouchableOpacity>
+
+                {msg ? (
+                  <View style={styles.msgBox}>
+                    <Text style={styles.msgText}>{msg}</Text>
+                  </View>
+                ) : null}
+
+                <TouchableOpacity
+                  style={styles.switchBtn}
+                  onPress={() => { setIsCadastro(!isCadastro); setMsg(''); }}
+                >
+                  <Text style={styles.switchText}>
+                    {isCadastro ? 'Já tem conta? ' : 'Não tem conta? '}
+                    <Text style={styles.switchTextAccent}>
+                      {isCadastro ? 'Entrar' : 'Cadastre-se'}
+                    </Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: '#0e0b08',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
+    paddingVertical: 40,
+  },
+  formContainer: {
+    width: '100%',
   },
   brandArea: {
     alignItems: 'center',
@@ -195,7 +244,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2018',
     marginBottom: 36,
   },
-  formArea: {},
   formTitle: {
     color: '#c9943a',
     fontSize: 13,
@@ -213,15 +261,37 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 6,
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#17120c',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#2a2018',
+    height: 50, // Altura fixa para evitar que ele estique
+    overflow: 'hidden',
+  },
   input: {
     backgroundColor: '#17120c',
     color: '#f0e6d3',
     paddingHorizontal: 14,
-    paddingVertical: 13,
+    height: 50,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#2a2018',
     fontSize: 15,
+  },
+  inputInside: {
+    flex: 1,
+    color: '#f0e6d3',
+    paddingHorizontal: 14,
+    height: '100%',
+    fontSize: 15,
+  },
+  eyeIcon: {
+    paddingHorizontal: 14,
+    height: '100%',
+    justifyContent: 'center',
   },
   btnPrimary: {
     backgroundColor: '#c9943a',
