@@ -84,7 +84,7 @@ export default function CardapioScreen() {
       const pixResponse = await fetch(`${API_URL}/pagamento/pix`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ total, pedidoId: pedidoData.pedido_id }),
+        body: JSON.stringify({pedidoId: pedidoData.pedido_id }),
       });
       const pixData = await pixResponse.json();
       if (!pixResponse.ok) { alert(pixData.erro || 'Erro ao gerar PIX'); return; }
